@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     PBS,
+    Office,
     Substation,
     EquipmentType,
     Equipment,
@@ -12,6 +13,7 @@ from .models import (
     EquipmentPosition,
     InspectionPhase,
     ChecklistResponse,
+    TestResult,
 )
 
 
@@ -24,7 +26,6 @@ class PBSAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "code",
-        "zone_office",
         "is_active",
         "created_at",
     )
@@ -32,7 +33,6 @@ class PBSAdmin(admin.ModelAdmin):
     search_fields = (
         "name",
         "code",
-        "zone_office",
     )
 
     list_filter = (
@@ -45,6 +45,38 @@ class PBSAdmin(admin.ModelAdmin):
     )
 
 
+# =========================================================
+# OFFICE
+# =========================================================
+
+@admin.register(Office)
+class OfficeAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "code",
+        "office_type",
+        "pbs",
+        "is_active",
+        "created_at",
+    )
+
+    search_fields = (
+        "name",
+        "code",
+        "pbs__name",
+        "pbs__code",
+    )
+
+    list_filter = (
+        "pbs",
+        "office_type",
+        "is_active",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
 # =========================================================
 # SUBSTATION
 # =========================================================
@@ -448,6 +480,41 @@ class ChecklistResponseAdmin(admin.ModelAdmin):
         "phase",
         "equipment",
         "report",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+
+# =========================================================
+# TEST RESULT
+# =========================================================
+
+@admin.register(TestResult)
+class TestResultAdmin(admin.ModelAdmin):
+    list_display = (
+        "report",
+        "equipment",
+        "test_name",
+        "test_date",
+        "measured_value",
+        "unit",
+        "result_status",
+    )
+
+    search_fields = (
+        "report__report_no",
+        "equipment__name",
+        "equipment__equipment_code",
+        "test_name",
+    )
+
+    list_filter = (
+        "result_status",
+        "test_date",
+        "equipment",
     )
 
     readonly_fields = (

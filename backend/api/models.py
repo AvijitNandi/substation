@@ -4,7 +4,6 @@ from django.db import models
 class PBS(models.Model):
     name = models.CharField(max_length=150)
     code = models.CharField(max_length=30, unique=True)
-    zone_office = models.CharField(max_length=150)
     address = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=30, blank=True, null=True)
     email = models.EmailField(max_length=150, blank=True, null=True)
@@ -18,6 +17,63 @@ class PBS(models.Model):
         ordering = ["name"]
         verbose_name = "PBS"
         verbose_name_plural = "PBS"
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+class Office(models.Model):
+    OFFICE_TYPE_CHOICES = [
+        ("SADAR", "Sadar Office"),
+        ("ZONAL", "Zonal Office"),
+        ("SUB_ZONAL", "Sub-Zonal Office"),
+    ]
+
+    pbs = models.ForeignKey(
+        PBS,
+        on_delete=models.PROTECT,
+        related_name="offices",
+    )
+
+    name = models.CharField(max_length=150)
+
+    code = models.CharField(max_length=50)
+
+    office_type = models.CharField(
+        max_length=20,
+        choices=OFFICE_TYPE_CHOICES,
+    )
+
+    address = models.TextField(
+        blank=True,
+        null=True,
+    )
+
+    phone = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+    )
+
+    email = models.EmailField(
+        max_length=150,
+        blank=True,
+        null=True,
+    )
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "office"
+        ordering = ["office_type", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["pbs", "code"],
+                name="unique_office_code_per_pbs",
+            )
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -446,6 +502,96 @@ class InspectionPhase(models.Model):
 
     def __str__(self):
         return f"{self.equipment.name} - {self.phase}"
+
+
+class TestResult(models.Model):
+    RESULT_STATUS_CHOICES = [
+        ("PASS", "Pass"),
+        ("FAIL", "Fail"),
+        ("SATISFACTORY", "Satisfactory"),
+        ("UNSATISFACTORY", "Unsatisfactory"),
+        ("NOT_TESTED", "Not Tested"),
+    ]
+
+    report = models.ForeignKey(
+        InspectionReport,
+        on_delete=models.CASCADE,
+        related_name="test_results",
+    )
+
+    equipment = models.ForeignKey(
+        Equipment,
+        on_delete=models.PROTECT,
+        related_name="test_results",
+    )
+
+    test_name = models.CharField(
+        max_length=200,
+    )
+
+    phase = models.ForeignKey(
+        InspectionPhase,
+        on_delete=models.CASCADE,
+        related_name="test_results",
+        blank=True,
+        null=True,
+    )
+
+    position = models.ForeignKey(
+        EquipmentPosition,
+        on_delete=models.CASCADE,
+        related_name="test_results",
+        blank=True,
+        null=True,
+    )
+
+    test_date = models.DateField(
+        blank=True,
+        null=True,
+    )
+
+    measured_value = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        blank=True,
+        null=True,
+    )
+
+    unit = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+
+    result_status = models.CharField(
+        max_length=30,
+        choices=RESULT_STATUS_CHOICES,
+        default="NOT_TESTED",
+    )
+
+    remarks = models.TextField(
+        blank=True,
+        null=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        db_table = "test_result"
+        ordering = ["-test_date", "-id"]
+
+    def __str__(self):
+        return (
+            f"{self.report.report_no} - "
+            f"{self.equipment.name} - "
+            f"{self.test_name}"
+        )
 
 
 class ChecklistResponse(models.Model):
