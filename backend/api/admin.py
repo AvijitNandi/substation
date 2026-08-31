@@ -13,6 +13,7 @@ from .models import (
     EquipmentPosition,
     InspectionPhase,
     ChecklistResponse,
+    TestType,
     TestResult,
 )
 
@@ -489,27 +490,57 @@ class ChecklistResponseAdmin(admin.ModelAdmin):
 
 
 # =========================================================
+# TEST Type
+# =========================================================
+
+@admin.register(TestType)
+class TestTypeAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "code",
+        "unit",
+        "is_active",
+        "created_at",
+    )
+
+    search_fields = (
+        "name",
+        "code",
+    )
+
+    list_filter = (
+        "is_active",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+
+# =========================================================
 # TEST RESULT
 # =========================================================
 
 @admin.register(TestResult)
 class TestResultAdmin(admin.ModelAdmin):
     list_display = (
-        "report",
-        "equipment",
-        "test_name",
-        "test_date",
-        "measured_value",
-        "unit",
-        "result_status",
-    )
+    "report",
+    "equipment",
+    "test_type",
+    "test_date",
+    "measured_value",
+    "unit",
+    "result_status",
+)
 
     search_fields = (
-        "report__report_no",
-        "equipment__name",
-        "equipment__equipment_code",
-        "test_name",
-    )
+    "report__report_no",
+    "equipment__name",
+    "equipment__equipment_code",
+    "test_type__name",
+    "test_type__code",
+)
 
     list_filter = (
         "result_status",
