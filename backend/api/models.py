@@ -716,3 +716,20 @@ class ChecklistResponse(models.Model):
         )
 
 
+class Attachment(models.Model):
+    report = models.ForeignKey(
+        InspectionReport,
+        on_delete=models.CASCADE,
+        related_name="attachments"
+    )
+
+    file = models.FileField(upload_to="inspection_attachments/")
+
+    title = models.CharField(max_length=255, blank=True)
+
+    description = models.TextField(blank=True)
+
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title or self.file.name

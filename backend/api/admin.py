@@ -15,6 +15,7 @@ from .models import (
     ChecklistResponse,
     TestType,
     TestResult,
+    Attachment,
 )
 
 
@@ -551,4 +552,29 @@ class TestResultAdmin(admin.ModelAdmin):
     readonly_fields = (
         "created_at",
         "updated_at",
+    )
+
+
+# =========================================================
+# Attachment
+# =========================================================
+
+@admin.register(Attachment)
+class AttachmentAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "report",
+        "title",
+        "file",
+        "uploaded_at",
+    )
+
+    search_fields = (
+        "title",
+        "description",
+        "report__report_no",
+    )
+
+    list_filter = (
+        "uploaded_at",
     )

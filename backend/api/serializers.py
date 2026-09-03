@@ -15,6 +15,7 @@ from .models import (
     InspectionPhase,
     TestResult,
     ChecklistResponse,
+    Attachment,
 )
 
 
@@ -99,4 +100,9 @@ class TestResultSerializer(serializers.ModelSerializer):
 class ChecklistResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChecklistResponse
+        fields = "__all__"
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attachment
         fields = "__all__"

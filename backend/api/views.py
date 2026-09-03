@@ -15,6 +15,7 @@ from .models import (
     InspectionPhase,
     TestResult,
     ChecklistResponse,
+    Attachment,
 )
 
 from .serializers import (
@@ -32,6 +33,7 @@ from .serializers import (
     InspectionPhaseSerializer,
     TestResultSerializer,
     ChecklistResponseSerializer,
+    AttachmentSerializer,
 )
 
 
@@ -103,3 +105,8 @@ class TestResultViewSet(viewsets.ModelViewSet):
 class ChecklistResponseViewSet(viewsets.ModelViewSet):
     queryset = ChecklistResponse.objects.all()
     serializer_class = ChecklistResponseSerializer
+
+
+class AttachmentViewSet(viewsets.ModelViewSet):
+    queryset = Attachment.objects.all()
+    serializer_class = AttachmentSerializer
