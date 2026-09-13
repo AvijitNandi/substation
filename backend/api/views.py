@@ -16,6 +16,8 @@ from .models import (
     TestResult,
     ChecklistResponse,
     Attachment,
+    Approval,
+    MaintenanceAction,
 )
 
 from .serializers import (
@@ -34,6 +36,8 @@ from .serializers import (
     TestResultSerializer,
     ChecklistResponseSerializer,
     AttachmentSerializer,
+    ApprovalSerializer,
+    MaintenanceActionSerializer,
 )
 
 
@@ -110,3 +114,21 @@ class ChecklistResponseViewSet(viewsets.ModelViewSet):
 class AttachmentViewSet(viewsets.ModelViewSet):
     queryset = Attachment.objects.all()
     serializer_class = AttachmentSerializer
+
+    def get_queryset(self):
+        queryset = Attachment.objects.all()
+
+        report_id = self.request.query_params.get("report")
+
+        if report_id:
+            queryset = queryset.filter(report_id=report_id)
+
+        return queryset
+
+class MaintenanceActionViewSet(viewsets.ModelViewSet):
+    queryset = MaintenanceAction.objects.all()
+    serializer_class = MaintenanceActionSerializer
+
+class ApprovalViewSet(viewsets.ModelViewSet):
+    queryset = Approval.objects.all()
+    serializer_class = ApprovalSerializer

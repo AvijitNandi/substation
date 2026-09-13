@@ -359,8 +359,73 @@ class InspectionReport(models.Model):
         db_table = "inspection_report"
         ordering = ["-inspection_date", "-id"]
 
+    def change_status(self, new_status):
+        allowed_transitions = {
+            "DRAFT": ["SUBMITTED"],
+            "SUBMITTED": ["UNDER_REVIEW"],
+            "UNDER_REVIEW": ["FINAL_APPROVED", "REJECTED"],
+            "REJECTED": ["SUBMITTED"],
+            "FINAL_APPROVED": ["CLOSED"],
+            "CLOSED": [],
+        }
+
+        if new_status not in allowed_transitions.get(self.status, []):
+            raise ValueError(
+                f"Cannot change status from {self.status} to {new_status}"
+            )
+
+        self.status = new_status
+        self.save(update_fields=["status", "updated_at"])    
+
     def __str__(self):
         return self.report_no
+
+
+class Approval(models.Model):
+    ACTION_CHOICES = [
+        ("SUBMITTED", "Submitted"),
+        ("APPROVED", "Approved"),
+        ("REJECTED", "Rejected"),
+        ("RETURNED", "Returned"),
+    ]
+
+    report = models.ForeignKey(
+        InspectionReport,
+        on_delete=models.CASCADE,
+        related_name="approvals",
+    )
+
+    action = models.CharField(
+        max_length=30,
+        choices=ACTION_CHOICES,
+    )
+
+    acted_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="inspection_approvals",
+    )
+
+    comment = models.TextField(
+        blank=True,
+        null=True,
+    )
+
+    acted_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        db_table = "approval"
+        ordering = ["-acted_at", "-id"]
+
+    def __str__(self):
+        return (
+            f"{self.report.report_no} - "
+            f"{self.action} - "
+            f"{self.acted_by.username}"
+        )
+
 
 class ChecklistTemplate(models.Model):
     inspection_type = models.ForeignKey(
@@ -733,3 +798,107 @@ class Attachment(models.Model):
 
     def __str__(self):
         return self.title or self.file.name
+
+class MaintenanceAction(models.Model):
+    PRIORITY_CHOICES = [
+        ("LOW", "Low"),
+        ("MEDIUM", "Medium"),
+        ("HIGH", "High"),
+        ("CRITICAL", "Critical"),
+    ]
+
+    STATUS_CHOICES = [
+        ("PENDING", "Pending"),
+        ("IN_PROGRESS", "In Progress"),
+        ("COMPLETED", "Completed"),
+    ]
+
+    report = models.ForeignKey(
+        InspectionReport,
+        on_delete=models.CASCADE,
+        related_name="maintenance_actions"
+    )
+
+    equipment = models.ForeignKey(
+        Equipment,
+        on_delete=models.PROTECT,
+        related_name="maintenance_actions"
+    )
+
+    action_required = models.TextField()
+
+    priority = models.CharField(
+        max_length=20,
+        choices=PRIORITY_CHOICES,
+        default="MEDIUM"
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING"
+    )
+
+    assigned_to = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="assigned_maintenance_actions"
+    )
+
+    due_date = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    remarks = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"{self.report.report_no} - {self.equipment} - {self.status}"
+
+class ApprovalAction(models.Model):
+    ACTION_CHOICES = [
+        ("SUBMIT", "Submit"),
+        ("APPROVE", "Approve"),
+        ("REJECT", "Reject"),
+    ]
+
+    report = models.ForeignKey(
+        InspectionReport,
+        on_delete=models.CASCADE,
+        related_name="approval_actions",
+    )
+
+    action = models.CharField(
+        max_length=20,
+        choices=ACTION_CHOICES,
+    )
+
+    action_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="approval_actions",
+    )
+
+    comment = models.TextField(blank=True)
+
+    action_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.report.report_no} - {self.action}"

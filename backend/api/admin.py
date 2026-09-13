@@ -16,6 +16,8 @@ from .models import (
     TestType,
     TestResult,
     Attachment,
+    Approval,
+    MaintenanceAction,
 )
 
 
@@ -577,4 +579,68 @@ class AttachmentAdmin(admin.ModelAdmin):
 
     list_filter = (
         "uploaded_at",
+    )
+
+# =========================================================
+# Approval
+# =========================================================
+
+@admin.register(Approval)
+class ApprovalAdmin(admin.ModelAdmin):
+    list_display = (
+        "report",
+        "action",
+        "acted_by",
+        "acted_at",
+    )
+
+    list_filter = (
+        "action",
+        "acted_at",
+    )
+
+    search_fields = (
+        "report__report_no",
+        "acted_by__username",
+        "comment",
+    )
+
+    readonly_fields = (
+        "acted_at",
+    )
+
+# =========================================================
+# Maintenance Action
+# =========================================================
+
+@admin.register(MaintenanceAction)
+class MaintenanceActionAdmin(admin.ModelAdmin):
+    list_display = (
+        "report",
+        "equipment",
+        "action_required",
+        "priority",
+        "status",
+        "assigned_to",
+        "due_date",
+    )
+
+    list_filter = (
+        "priority",
+        "status",
+        "due_date",
+    )
+
+    search_fields = (
+        "report__report_no",
+        "action_required",
+        "equipment__name",
+        "assigned_to__username",
+        "remarks",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "completed_at",
     )

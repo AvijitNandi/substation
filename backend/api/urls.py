@@ -16,6 +16,8 @@ from .views import (
     TestResultViewSet,
     ChecklistResponseViewSet,
     AttachmentViewSet,
+    ApprovalViewSet,
+    MaintenanceActionViewSet,
 )
 
 
@@ -36,6 +38,8 @@ router.register(r"inspection-phases", InspectionPhaseViewSet)
 router.register(r"test-results", TestResultViewSet)
 router.register(r"checklist-responses", ChecklistResponseViewSet)
 router.register(r"attachments", AttachmentViewSet)
+router.register(r"approvals", ApprovalViewSet)
+router.register(r"maintenance-actions", MaintenanceActionViewSet)
 
 
 urlpatterns = router.urls

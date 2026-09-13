@@ -16,6 +16,8 @@ from .models import (
     TestResult,
     ChecklistResponse,
     Attachment,
+    Approval,
+    MaintenanceAction,
 )
 
 
@@ -106,3 +108,14 @@ class AttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
         fields = "__all__"
+
+class MaintenanceActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MaintenanceAction
+        fields = "__all__"
+
+class ApprovalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Approval
+        fields = "__all__"
+        read_only_fields = ("acted_at",)
