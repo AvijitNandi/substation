@@ -18,6 +18,7 @@ from .models import (
     Attachment,
     Approval,
     MaintenanceAction,
+    AuditLog,
 )
 
 
@@ -643,4 +644,34 @@ class MaintenanceActionAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
         "completed_at",
+    )
+
+# =========================================================
+# Audit Log
+# =========================================================
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = (
+        "report",
+        "action",
+        "performed_by",
+        "old_status",
+        "new_status",
+        "created_at",
+    )
+
+    list_filter = (
+        "action",
+        "created_at",
+    )
+
+    search_fields = (
+        "report__report_no",
+        "performed_by__username",
+        "comment",
+    )
+
+    readonly_fields = (
+        "created_at",
     )

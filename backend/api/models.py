@@ -902,3 +902,65 @@ class ApprovalAction(models.Model):
 
     def __str__(self):
         return f"{self.report.report_no} - {self.action}"
+
+
+class AuditLog(models.Model):
+    ACTION_CHOICES = [
+        ("CREATE", "Create"),
+        ("UPDATE", "Update"),
+        ("STATUS_CHANGE", "Status Change"),
+        ("DELETE", "Delete"),
+        ("APPROVAL", "Approval"),
+        ("REJECTION", "Rejection"),
+        ("SUBMIT", "Submit"),
+    ]
+
+    report = models.ForeignKey(
+        InspectionReport,
+        on_delete=models.CASCADE,
+        related_name="audit_logs",
+        null=True,
+        blank=True,
+    )
+
+    action = models.CharField(
+        max_length=30,
+        choices=ACTION_CHOICES,
+    )
+
+    performed_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="audit_logs",
+    )
+
+    old_status = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+    )
+
+    new_status = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+    )
+
+    comment = models.TextField(
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        db_table = "audit_log"
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return (
+            f"{self.report.report_no if self.report else 'System'} - "
+            f"{self.action} - "
+            f"{self.performed_by.username}"
+        )

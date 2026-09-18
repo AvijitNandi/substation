@@ -18,6 +18,7 @@ from .models import (
     Attachment,
     Approval,
     MaintenanceAction,
+    AuditLog,
 )
 
 
@@ -64,6 +65,10 @@ class TestTypeSerializer(serializers.ModelSerializer):
 
 
 class InspectionReportSerializer(serializers.ModelSerializer):
+    created_by = serializers.PrimaryKeyRelatedField(
+        read_only=True
+    )
+
     class Meta:
         model = InspectionReport
         fields = "__all__"
@@ -115,7 +120,17 @@ class MaintenanceActionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ApprovalSerializer(serializers.ModelSerializer):
+
+    acted_by = serializers.PrimaryKeyRelatedField(
+        read_only=True
+    )
+
     class Meta:
         model = Approval
         fields = "__all__"
         read_only_fields = ("acted_at",)
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditLog
+        fields = "__all__"
