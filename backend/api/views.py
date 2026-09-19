@@ -112,8 +112,11 @@ class InspectionReportViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            report.change_status(new_status)
-
+            report.change_status(
+                new_status,
+                acted_by=request.user,
+                comment=request.data.get("comment", "")
+    )
         except ValueError as e:
             return Response(
                 {
@@ -236,6 +239,16 @@ class ApprovalViewSet(viewsets.ModelViewSet):
     serializer_class = ApprovalSerializer
 
     permission_classes = [ApprovalActionPermission]
+
+    def get_queryset(self):
+        queryset = Approval.objects.all()
+
+        report_id = self.request.query_params.get("report")
+
+        if report_id:
+            queryset = queryset.filter(report_id=report_id)
+
+        return queryset
 
     def update(self, request, *args, **kwargs):
         return Response(

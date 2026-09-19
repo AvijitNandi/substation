@@ -171,24 +171,8 @@ class InspectionReportPermission(BasePermission):
 class ApprovalActionPermission(BasePermission):
     """
     Controls Approval actions based on user role.
+    Approval records are read-only and system-generated.
     """
-
-    ROLE_ACTIONS = {
-        "ADMIN": {
-            "SUBMITTED",
-            "APPROVED",
-            "REJECTED",
-            "RETURNED",
-        },
-        "REVIEWER": {
-            "RETURNED",
-            "REJECTED",
-        },
-        "APPROVER": {
-            "APPROVED",
-            "REJECTED",
-        },
-    }
 
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
@@ -196,32 +180,41 @@ class ApprovalActionPermission(BasePermission):
 
         # Superuser = ADMIN
         if request.user.is_superuser:
-            return True
+            return request.method in ["GET", "HEAD", "OPTIONS"]
 
         user_roles = set(
             request.user.groups.values_list("name", flat=True)
         )
 
-        allowed_roles = {"ADMIN", "REVIEWER", "APPROVER"}
+        allowed_roles = {
+            "ADMIN",
+            "REVIEWER",
+            "APPROVER",
+        }
 
-        return bool(user_roles & allowed_roles)
+        # Approval history can only be viewed
+        if request.method in ["GET", "HEAD", "OPTIONS"]:
+            return bool(user_roles & allowed_roles)
+
+        # POST, PUT, PATCH, DELETE are not allowed
+        return False
 
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
-            return True
+            return request.method in ["GET", "HEAD", "OPTIONS"]
 
-        # All authorized roles can view approval history
+        user_roles = set(
+            request.user.groups.values_list("name", flat=True)
+        )
+
+        allowed_roles = {
+            "ADMIN",
+            "REVIEWER",
+            "APPROVER",
+        }
+
+        # Approval history can only be viewed
         if request.method in ["GET", "HEAD", "OPTIONS"]:
-            user_roles = set(
-                request.user.groups.values_list("name", flat=True)
-            )
-
-            allowed_roles = {
-                "ADMIN",
-                "REVIEWER",
-                "APPROVER",
-            }
-
             return bool(user_roles & allowed_roles)
 
         # Approval records cannot be modified or deleted

@@ -359,7 +359,7 @@ class InspectionReport(models.Model):
         db_table = "inspection_report"
         ordering = ["-inspection_date", "-id"]
 
-    def change_status(self, new_status):
+    def change_status(self, new_status, acted_by=None, comment=""):
         allowed_transitions = {
             "DRAFT": ["SUBMITTED"],
             "SUBMITTED": ["UNDER_REVIEW"],
@@ -374,12 +374,44 @@ class InspectionReport(models.Model):
                 f"Cannot change status from {self.status} to {new_status}"
             )
 
+        action_map = {
+            "SUBMITTED": "SUBMITTED",
+            "UNDER_REVIEW": "RETURNED",
+            "REJECTED": "REJECTED",
+            "FINAL_APPROVED": "APPROVED",
+            "CLOSED": "APPROVED",
+        }
+
+        # Update timestamps based on workflow status
+        if new_status == "SUBMITTED":
+            from django.utils import timezone
+            self.submitted_at = timezone.now()
+
+        if new_status == "CLOSED":
+            from django.utils import timezone
+            self.completed_at = timezone.now()
+
         self.status = new_status
-        self.save(update_fields=["status", "updated_at"])    
+
+        self.save(
+            update_fields=[
+                "status",
+                "submitted_at",
+                "completed_at",
+                "updated_at",
+            ]
+        )
+
+        if acted_by:
+            Approval.objects.create(
+                report=self,
+                acted_by=acted_by,
+                action=action_map[new_status],
+                comment=comment,
+            )
 
     def __str__(self):
         return self.report_no
-
 
 class Approval(models.Model):
     ACTION_CHOICES = [
