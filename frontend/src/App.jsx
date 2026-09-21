@@ -1,121 +1,235 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
 import './App.css'
 
+axios.defaults.withCredentials = true
+
+function getCookie(name) {
+  const cookies = document.cookie.split(';')
+
+  for (const cookie of cookies) {
+    const [key, value] = cookie.trim().split('=')
+
+    if (key === name) {
+      return decodeURIComponent(value)
+    }
+  }
+
+  return null
+}
+
+const API = 'http://localhost:8000/api'
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [substations, setSubstations] = useState([])
+  const [inspectionTypes, setInspectionTypes] = useState([])
+
+  const [formData, setFormData] = useState({
+    report_no: '',
+    inspection_date: '',
+    substation: '',
+    inspection_type: '',
+    peak_load_mw: '',
+    general_comment: '',
+  })
+
+  useEffect(() => {
+    axios
+      .get(`${API}/substations/`)
+      .then((response) => {
+        console.log('SUBSTATIONS:', response.data)
+        setSubstations(response.data.results)
+      })
+      .catch((error) => {
+        console.error('Substation API error:', error)
+      })
+
+    axios
+      .get(`${API}/inspection-types/`)
+      .then((response) => {
+        setInspectionTypes(response.data.results)
+      })
+      .catch((error) => {
+        console.error('Inspection Type API error:', error)
+      })
+  }, [])
+
+  const handleChange = (event) => {
+    const { name, value } = event.target
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    })
+  }
+
+  const handleSubmit = async () => {
+      if (!formData.report_no.trim()) {
+      alert('Report No. is required.')
+      return
+    }
+
+    if (!formData.inspection_date) {
+      alert('Inspection Date is required.')
+      return
+    }
+
+    if (!formData.substation) {
+      alert('Please select a Substation.')
+      return
+    }
+
+    if (!formData.inspection_type) {
+      alert('Please select an Inspection Type.')
+      return
+    }
+    try {
+      await axios.get(`${API}/csrf/`)
+
+      const payload = {
+        report_no: formData.report_no,
+        inspection_date: formData.inspection_date,
+        peak_load_mw: formData.peak_load_mw || null,
+        general_comment: formData.general_comment,
+        substation: Number(formData.substation),
+        inspection_type: Number(formData.inspection_type),
+      }
+
+      const response = await axios.post(
+          `${API}/inspection-reports/`,
+          payload,
+          {
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+            },
+          }
+        )
+
+      console.log('Report created:', response.data)
+
+      alert('Inspection Report saved successfully!')
+
+      setFormData({
+        report_no: '',
+        inspection_date: '',
+        substation: '',
+        inspection_type: '',
+        peak_load_mw: '',
+        general_comment: '',
+      })
+
+    } catch (error) {
+      console.error('Report save error:', error.response?.data || error)
+      alert('Failed to save report.')
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header className="header">
+        <h1>BREB Substation Inspection System</h1>
+        <p>Bangladesh Rural Electrification Board</p>
+      </header>
 
-      <div className="ticks"></div>
+      <main className="container">
+        <section className="card">
+          <h2>Inspection Report</h2>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <div className="form-grid">
+            <div>
+              <label>Report No.</label>
+              <input
+                type="text"
+                name="report_no"
+                value={formData.report_no}
+                onChange={handleChange}
+                placeholder="Enter report number"
+              />
+            </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+            <div>
+              <label>Inspection Date</label>
+              <input
+                type="date"
+                name="inspection_date"
+                value={formData.inspection_date}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label>Substation</label>
+              <select
+                name="substation"
+                value={formData.substation}
+                onChange={handleChange}
+              >
+                <option value="">Select Substation</option>
+
+                {substations.map((substation) => (
+                  <option key={substation.id} value={substation.id}>
+                    {substation.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label>Inspection Type</label>
+              <select
+                name="inspection_type"
+                value={formData.inspection_type}
+                onChange={handleChange}
+              >
+                <option value="">Select Inspection Type</option>
+
+                {inspectionTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label>Peak Load (MW)</label>
+              <input
+                type="number"
+                step="0.01"
+                name="peak_load_mw"
+                value={formData.peak_load_mw}
+                onChange={handleChange}
+                placeholder="0.00"
+              />
+            </div>
+
+            <div>
+              <label>Status</label>
+              <input
+                type="text"
+                value="DRAFT"
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="full-width">
+            <label>General Comment</label>
+            <textarea
+              rows="4"
+              name="general_comment"
+              value={formData.general_comment}
+              onChange={handleChange}
+              placeholder="Enter general comment"
+            ></textarea>
+          </div>
+
+          <button type="button" onClick={handleSubmit}>
+            Save Draft
+          </button>
+        </section>
+      </main>
+    </div>
   )
 }
 

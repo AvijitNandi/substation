@@ -1,4 +1,6 @@
 from rest_framework.routers import DefaultRouter
+from django.urls import path
+from .views import csrf_token
 
 from .views import (
     PBSViewSet,
@@ -44,4 +46,6 @@ router.register(r"maintenance-actions", MaintenanceActionViewSet)
 router.register(r"audit-logs", AuditLogViewSet)
 
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    path("csrf/", csrf_token, name="csrf-token"),
+]
